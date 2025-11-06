@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color-Logic Switch</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+  }
+  h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+  }
+  #shape {
+    width: 150px;
+    height: 150px;
+    margin: 30px auto;
+  }
+  .button-container {
+    margin: 10px;
+  }
+  button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #feedback {
+    font-size: 20px;
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  #level {
+    margin-top: 15px;
+    font-size: 18px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Color-Logic Switch</h1>
+<p id="prompt">Tap the color or shape</p>
+<div id="shape"></div>
+
+<div class="button-container" id="color-buttons">
+  <button data-value="red">Red</button>
+  <button data-value="green">Green</button>
+  <button data-value="blue">Blue</button>
+</div>
+
+<div class="button-container" id="shape-buttons">
+  <button data-value="square">Square</button>
+  <button data-value="circle">Circle</button>
+  <button data-value="triangle">Triangle</button>
+</div>
+
+<p id="feedback"></p>
+<p id="level">Level: 1</p>
+
+<script>
+const colors = ['red', 'green', 'blue'];
+const shapes = ['square', 'circle', 'triangle'];
+
+let currentColor = '';
+let currentShape = '';
+let currentPrompt = '';
+
+let level = 1;
+let levelGoal = 5;
+let answersThisLevel = 0;
+let baseTime = 20; // Level 1 time
+let timer = baseTime;
+let timerInterval = null;
+let gameActive = true;
+
+function startLevel() {
+  answersThisLevel = 0;
+  timer = Math.max(5, baseTime - (level - 1) * 2); 
+  // Level 1 = 20, Level 2 = 18 ... Level 10 = 5
+
+  document.getElementById('level').textContent = `Level: ${level}`;
+  updateTimerDisplay();
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+
+  drawShape();
+}
+
+function updateTimer() {
+  if (!gameActive) return;
+
+  timer--;
+  updateTimerDisplay();
+
+  if (timer <= 0) {
+    gameOver();
+  }
+}
+
+function updateTimerDisplay() {
+  document.getElementById('timer').textContent = `⏱ Time: ${timer}s`;
+}
+
+function getRandomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function drawShape() {
+  const shapeDiv = document.getElementById('shape');
+  shapeDiv.style = '';
+  shapeDiv.innerHTML = '';
+
+  currentColor = getRandomItem(colors);
+  currentShape = getRandomItem(shapes);
+  currentPrompt = Math.random() < 0.5 ? 'color' : 'shape';
+  document.getElementById('prompt').textContent = `Tap the ${currentPrompt}`;
+
+  if (currentShape === 'square') {
+    shapeDiv.style.width = '150px';
+    shapeDiv.style.height = '150px';
+    shapeDiv.style.backgroundColor = currentColor;
+  } else if (currentShape === 'circle') {
+    shapeDiv.style.width = '150px';
+    shapeDiv.style.height = '150px';
+    shapeDiv.style.backgroundColor = currentColor;
+    shapeDiv.style.borderRadius = '50%';
+  } else if (currentShape === 'triangle') {
+    shapeDiv.style.width = '0';
+    shapeDiv.style.height = '0';
+    shapeDiv.style.borderLeft = '75px solid transparent';
+    shapeDiv.style.borderRight = '75px solid transparent';
+    shapeDiv.style.borderBottom = `150px solid ${currentColor}`;
+  }
+}
+
+// Handle button clicks
+document.querySelectorAll('#color-buttons button, #shape-buttons button').forEach(button => {
+  button.addEventListener('click', () => {
+    if (!gameActive) return;
+    checkAnswer(button.getAttribute('data-value'));
+  });
+});
+
+function checkAnswer(value) {
+  const feedback = document.getElementById('feedback');
+  feedback.style.color = '';
+
+  let correct = false;
+  if (currentPrompt === 'color' && value === currentColor) correct = true;
+  if (currentPrompt === 'shape' && value === currentShape) correct = true;
+
+  if (correct) {
+    answersThisLevel++;
+    feedback.textContent = `✅ Correct (${answersThisLevel}/${levelGoal})`;
+
+    if (answersThisLevel >= levelGoal) {
+      nextLevel();
+      return;
+    }
+  } else {
+    feedback.textContent = `❌ Wrong!`;
+  }
+
+  drawShape();
+}
+
+function nextLevel() {
+  level++;
+  if (level > 10) {
+    youWin();
+    return;
+  }
+
+  document.getElementById('feedback').textContent = '';
+  startLevel();
+}
+
+function youWin() {
+  gameActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('feedback').style.color = 'gold';
+  document.getElementById('feedback').textContent = '🏆 YOU WIN! Incredible focus!';
+}
+
+function gameOver() {
+  gameActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('feedback').style.color = 'red';
+  document.getElementById('feedback').textContent = '💥 Time’s up! Game Over!';
+}
+
+// UI additions
+document.getElementById('shape-buttons').insertAdjacentHTML('afterend',
+  '<p id="timer" style="font-size:22px;margin-top:10px;"></p>'
+);
+
+startLevel();
+</script>
+
+
+</body>
+</html>
